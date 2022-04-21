@@ -30,11 +30,17 @@ void run_monte_carlo(const int *i_exp,
 
     // initialize data structures
     experiment_set_init(&experiment_set, n, i_exp, i_node, outcome, value, is_perturbation);
+    printf("Intialized experiment\n");
     network_init(&net, experiment_set.n_node, max_parents);
+    printf("Intialized network\n");
     network_randomize_parents(&net);
+    printf("Randomized parents\n");
     network_set_outcomes_to_null(&net);
+    printf("Set outcomes to null\n");
 
     // network monte carlo
+    printf("Running score with parameters n_cycles=%d n_write=%d T_lo=%lf T_high=%lf n_thread=%d target_score=%lf exchange_interval=%d adjust_move_size_interval=%d max_states=%d\n",
+        n_cycles, n_write, T_lo, T_hi, n_thread, target_score, exchange_interval, adjust_move_size_interval, max_states);
     double score = network_monte_carlo(
         &net,
         &experiment_set,
@@ -48,6 +54,7 @@ void run_monte_carlo(const int *i_exp,
         exchange_interval,
         adjust_move_size_interval,
         max_states);
+    printf("Finished running score, obtained value %lf\n", score);
 }
 
 void test()

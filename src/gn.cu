@@ -26,76 +26,76 @@
 #ifdef USE_CUDA
 network_t load_network_to_gpu(network_t n)
 {
-    network_t d_n;
+  network_t d_n;
 
-    cudaMallocManaged(&d_n, sizeof(network_t));
-    d_n->n_node = n->n_node;
-    d_n->n_parent = n->n_parent;
-    d_n->n_outcome = n->n_outcome;
+  cudaMallocManaged(&d_n, sizeof(network_t));
+  d_n->n_node = n->n_node;
+  d_n->n_parent = n->n_parent;
+  d_n->n_outcome = n->n_outcome;
 
-    int *parent_data;
-    int parent_size = n->n_parent;
-    cudaMallocManaged(&parent_data, parent_size * parent_size * sizeof(int));
-    cudaMallocManaged(&d_n->parent, parent_size * sizeof(int *));
-    // QUESTION: Here the n->parent is a n_node x n_parent matrix 
-    //           and the way you have defined it is as n_parent x n_parent
-    for (int i=0;i<d_n->n_node;i++) {
-        for (int j=0;j<parent_size;j++) {
-            parent_data[i*parent_size+j] = n->parent[i][j];
-        }
+  int *parent_data;
+  int parent_size = n->n_parent;
+  cudaMallocManaged(&parent_data, parent_size * parent_size * sizeof(int));
+  cudaMallocManaged(&d_n->parent, parent_size * sizeof(int *));
+  // QUESTION: Here the n->parent is a n_node x n_parent matrix 
+  //           and the way you have defined it is as n_parent x n_parent
+  for (int i=0;i<d_n->n_node;i++) {
+    for (int j=0;j<parent_size;j++) {
+        parent_data[i*parent_size+j] = n->parent[i][j];
     }
+  }
 
-    for (int i=0;i<d_n->n_node;i++) {
-        d_n->parent[i] = &(parent_data[i*parent_size]);
+  for (int i=0;i<d_n->n_node;i++) {
+    d_n->parent[i] = &(parent_data[i*parent_size]);
+  }
+
+  int *outcome_data;
+  int outcome_size = n->n_outcome;
+  cudaMallocManaged(&outcome_data, outcome_size*outcome_size*sizeof(int));
+  cudaMallocManaged(&d_n->outcome, outcome_size * sizeof(int *));
+  // QUESTION: Here the n->outcome is a n_node x n_outcome matrix 
+  //           and the way you have defined it is as n_outcome x n_outcome
+  for (int i=0;i < d_n->n_node;i++) {
+    for (int j=0;j<outcome_size;j++) {
+      outcome_data[i*outcome_size+j] = n->outcome[i][j];
     }
+  }
 
-    int *outcome_data;
-    int outcome_size = n->n_outcome;
-    cudaMallocManaged(&outcome_data, outcome_size*outcome_size*sizeof(int));
-    cudaMallocManaged(&d_n->outcome, outcome_size * sizeof(int *));
-    // QUESTION: Here the n->outcome is a n_node x n_outcome matrix 
-    //           and the way you have defined it is as n_outcome x n_outcome
-    for (int i=0;i < d_n->n_node;i++) {
-        for (int j=0;j<outcome_size;j++) {
-            outcome_data[i*outcome_size+j] = n->outcome[i][j];
-        }
-    }
+  for (int i=0;i<d_n->n_node;i++) {
+    d_n->outcome[i] = &(outcome_data[i*outcome_size]);
+  }
 
-    for (int i=0;i<d_n->n_node;i++) {
-        d_n->outcome[i] = &(outcome_data[i*outcome_size]);
-    }
-
-    return d_n;
+  return d_n;
 }
 
 experiment_set_t load_experiment_set_to_gpu(experiment_set_t eset) {
-    experiment_set_t d_eset;
-    const size_t size = sizeof(experiment_set);
-    const size_t size_of_experiments = eset->n_experiment*sizeof(experiment)
-    cudaMallocManaged(&d_eset, size);
-    cudaMallocManaged(&d_eset->experiment, size_of_experiments);
-    d_eset->n_node = eset->n_node;
-    d_eset->n_experiment = eset->n_experiment;
-    cudaMemcpy(d_eset->experiment, eset->experiment, size_of_experiments, cudaMemcpyHostToDevice);
-    return d_eset;
+  experiment_set_t d_eset;
+  const size_t size = sizeof(experiment_set);
+  const size_t size_of_experiments = eset->n_experiment*sizeof(experiment)
+  cudaMallocManaged(&d_eset, size);
+  cudaMallocManaged(&d_eset->experiment, size_of_experiments);
+  d_eset->n_node = eset->n_node;
+  d_eset->n_experiment = eset->n_experiment;
+  cudaMemcpy(d_eset->experiment, eset->experiment, size_of_experiments, cudaMemcpyHostToDevice);
+  return d_eset;
 }
 
 trajectory_t new_trajectory_gpu(int ntraj, int max_states, int n_node) 
 {
-    trajectory_t d_t;
-    cudaMallocManaged(&d_t, ntraj*sizeof(trajectory));
-    for (int i=0;i<ntraj;i++) 
-    {
-        int *data;
-        trajectory_t curr = &d_t[i];
-        cudaMallocManaged(&data, max_states*n_node*sizeof(int));
-        cudaMallocManaged(&curr->state, max_states * sizeof(int *));
-        for (int j=0;j<max_states;j++) 
-        {
-            curr->state[j] = &(data[j*n_node]);
-        }
-    }
-    return d_t;
+  trajectory_t d_t;
+  cudaMallocManaged(&d_t, ntraj*sizeof(trajectory));
+  for (int i=0;i<ntraj;i++) 
+  {
+      int *data;
+      trajectory_t curr = &d_t[i];
+      cudaMallocManaged(&data, max_states*n_node*sizeof(int));
+      cudaMallocManaged(&curr->state, max_states * sizeof(int *));
+      for (int j=0;j<max_states;j++) 
+      {
+          curr->state[j] = &(data[j*n_node]);
+      }
+  }
+  return d_t;
 }
 
 __global__ void cuda_init_trajectory(trajectory_t t, const experiment_t e, int n_node) {

@@ -125,7 +125,67 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
     s_kernels[globalIdx] = s;
   }
 
-} 
+}
+
+__global__ int repetition_found(const trajectory_t t)
+{
+  return t->repetition_end > 0;
+}
+
+__global__ double score_for_trajectory(const experiment_t e, const trajectory_t t)
+{
+  int i_node;
+  double s = 0;
+  for (i_node = 0; i_node < t->n_node; i_node++) {
+    const int si = t->steady_state[i_node];
+    if (si == UNDEFINED)
+      return LARGE_SCORE;
+    s += score_for_state(e, i_node, si);
+  }
+  return s;
+}
+
+__global__ void check_for_repetition(trajectory_t traj, int i_state)
+{
+  const int n_node = traj->n_node;
+  int i_node, j_state;
+  const int *si = &traj->state[i_state][0];
+  for (j_state = 0; j_state < i_state; j_state++)
+  {
+    const int *sj = &traj->state[j_state][0];
+    for (i_node = 0; i_node < n_node; i_node++)
+      if (si[i_node] != sj[i_node])
+        break;
+    if (i_node < n_node)
+      continue;
+    /* repetition found - create summary */
+    traj->repetition_start = j_state;
+    traj->repetition_end = i_state;
+    for (i_node = 0; i_node < traj->n_node; i_node++)
+    {
+      int k, visited_plus = 0, visited_minus = 0;
+      for (k = traj->repetition_start; k <= traj->repetition_end; k++)
+        if (traj->state[k][i_node] == 1)
+          visited_plus = 1;
+        else if (traj->state[k][i_node] == -1)
+          visited_minus = 1;
+      if (visited_plus && visited_minus)
+        traj->steady_state[i_node] = UNDEFINED;
+      else if (visited_plus)
+        traj->steady_state[i_node] = 1;
+      else if (visited_minus)
+        traj->steady_state[i_node] = -1;
+      else
+        traj->steady_state[i_node] = 0;
+    }
+    return;
+  }
+  /* no repetition found */
+  traj->repetition_start = 0;
+  traj->repetition_end = 0;
+  for (i_node = 0; i_node < n_node; i_node++)
+    traj->steady_state[i_node] = UNDEFINED;
+}
 
 static double cuda_score_host(network_t n, const experiment_set_t eset, trajectory_t trajectories, double limit, int max_states) {
   double s_tot = 0;

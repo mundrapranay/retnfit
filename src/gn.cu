@@ -54,8 +54,8 @@ network_t load_network_to_gpu(network_t n)
 
     int *parent_data;
     int parent_size = n->n_parent;
-    cudaMallocManaged(&parent_data, parent_size * parent_size * sizeof(int));
-    cudaMallocManaged(&d_n->parent, parent_size * sizeof(int *));
+    cudaMallocManaged(&parent_data, parent_size * n->n_node * sizeof(int));
+    cudaMallocManaged(&d_n->parent, n->n_node * sizeof(int *));
     // Here the n->parent is a n_node x n_parent matrix 
     // and the way you have defined it is as n_parent x n_parent
     for (int i=0;i<d_n->n_node;i++) {
@@ -71,8 +71,8 @@ network_t load_network_to_gpu(network_t n)
 
   int *outcome_data;
   int outcome_size = n->n_outcome;
-  cudaMallocManaged(&outcome_data, outcome_size*outcome_size*sizeof(int));
-  cudaMallocManaged(&d_n->outcome, outcome_size * sizeof(int *));
+  cudaMallocManaged(&outcome_data, outcome_size*n->n_node*sizeof(int));
+  cudaMallocManaged(&d_n->outcome, n->n_node * sizeof(int *));
   // QUESTION: Here the n->outcome is a n_node x n_outcome matrix 
   //           and the way you have defined it is as n_outcome x n_outcome
   for (int i=0;i < d_n->n_node;i++) {
@@ -878,11 +878,8 @@ double network_monte_carlo(network_t n,
   experiment_set_t gpu_e = load_experiment_set_to_gpu(e);
   trajectory_t trajectories = new_trajectory_gpu(e->n_experiment, max_states, n_node);
   double s = cuda_score_host(gpu_n, gpu_e, trajectories, HUGE_VAL, max_states), s_best = s;
-
-  // free from unified memory
-  cudaFree(gpu_n);
-  cudaFree(gpu_e);
-  cudaFree(trajectories);
+  n = gpu_n;
+  e = gpu_e;
 #endif // END of USE_CUDA
 
 
@@ -944,7 +941,11 @@ double network_monte_carlo(network_t n,
       }
     }
     const double limit = s - T*log(uniform_random_from_0_to_1_exclusive());
+#ifndef USE_CUDA
     const double s_new = score(n, e, trajectories, limit, max_states);
+#else
+    double s_new = cuda_score_host(n, e, trajectories, HUGE_VAL, max_states), s_best = s;
+#endif
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)
@@ -1055,19 +1056,12 @@ double network_monte_carlo(network_t n,
   network_delete(&best);
   network_delete(&t0);
 
-  #ifndef USE_CUDA
+#ifndef USE_CUDA
   trajectories_delete(trajectories, e->n_experiment);
-  #endif
-
-  #ifdef USE_CUDA
+#else
+  cudaFree(n);
+  cudaFree(e);
   cudaFree(trajectories);
-  #endif
-
-// #ifdef USE_CUDA
-//   cudaFree(gpu_n);
-//   cudaFree(gpu_e);
-//   cudaFree(gpu_trajectories);
-// #endif // END of USE_CUDA
-
+#endif
   return s_best;
 }

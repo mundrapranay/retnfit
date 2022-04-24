@@ -246,7 +246,6 @@ __global__ void cuda_network_advance_until_repetition(const network_t n, const e
 }
 
 __global__ void cuda_score_device(int n, network_t net, const experiment_set_t eset, trajectory_t trajectories, double limit, int max_states, double *s_kernels) {
-  // TODO: something 
   // printf("CUDA Score Device Called\n");
   double s_tot = 0.0;
   for (int i = 0; i < n; i++) {
@@ -256,6 +255,7 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
     return;
   }
   int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
+  // printf("Running kernel for experiment %d\n", globalIdx);
   if (globalIdx < n) {
     const experiment_t e = &eset->experiment[globalIdx];
     trajectory_t traj = &trajectories[globalIdx];
@@ -285,17 +285,21 @@ static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, 
   // cudaMemcpy(gpu_s_kernels, s_kernels, N*sizeof(double), cudaMemcpyHostToDevice);
 
   // make grid and block sizes according to input
-  int TILE = 8;
-  dim3 dimGrid((N - 1)/TILE + 1, (N - 1)/TILE + 1);
-  dim3 dimBlock(TILE, 1, 1);
-  // launch kernel
-  cuda_score_device<<<dimGrid, dimBlock>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
+  // int TILE = 8;
+  // dim3 dimGrid((N - 1)/TILE + 1, (N - 1)/TILE + 1);
+  // dim3 dimBlock(TILE, 1, 1);
+  // cuda_score_device<<<dimGrid, dimBlock>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
+
+  // Using 1D blocks
+  int numThreads = 32;
+  int numBlocks = (N + numThreads - 1 )/ numThreads;
+  cuda_score_device<<<numBlocks, numThreads>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
   // TODO: figure how to sync (s_tot <= limit) check [each kernel before starting checks]
   
   cudaDeviceSynchronize();
   // synchronize
   // calculate s_total
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < N && s_tot <= limit; i++) {
     s_tot += gpu_s_kernels[i];
   }
   
@@ -305,6 +309,7 @@ static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, 
 }
 
 #endif // END of USE_CUDA
+
 
 
 static int state_from_sym(char c)
@@ -840,6 +845,17 @@ static double fraction(unsigned long a, unsigned long b)
   return 0;
 }
 
+void print_matrix(int **mat, int m, int n) 
+{
+  int i,j;
+  for (i=0;i<m;i++) {
+    for (j=0;j<n;j++) {
+      printf("%d ", mat[i][j]);
+    }
+    printf("\n");
+  }
+}
+
 double network_monte_carlo(network_t n, 
 			   experiment_set_t e, 
 			   unsigned long n_cycles,
@@ -953,8 +969,9 @@ double network_monte_carlo(network_t n,
 #ifndef USE_CUDA
     const double s_new = score(n, e, trajectories, limit, max_states);
 #else
-    double s_new = cuda_score_host(n, e, trajectories, HUGE_VAL, max_states), s_best = s;
+    const double s_new = cuda_score_host(n, e, trajectories, limit, max_states);
 #endif
+    printf("New score obtained in iteration %lu is %lf on GPU\n", i, s_new);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)

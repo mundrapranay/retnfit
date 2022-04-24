@@ -63,7 +63,6 @@ network_t load_network_to_gpu(network_t n)
             parent_data[i*parent_size+j] = n->parent[i][j];
         }
     }
-  }
 
   for (int i=0;i<d_n->n_node;i++) {
     d_n->parent[i] = &(parent_data[i*parent_size]);
@@ -143,7 +142,7 @@ __device__ double cuda_score_for_trajectory(const experiment_t e, const trajecto
 
 __device__ static int cuda_most_probable_state(const experiment_t e, int i)
 {
-  printf("CUDA Most Probable Called\n");
+  // printf("CUDA Most Probable Called\n");
   int min_s = -1;
   double min = cuda_score_for_state(e,i,-1);
   int s;
@@ -156,7 +155,7 @@ __device__ static int cuda_most_probable_state(const experiment_t e, int i)
 }
 
 __global__ void cuda_init_trajectory(trajectory_t t, const experiment_t e, int n_node) {
-  printf("CUDA Init Traj Called\n");
+  // printf("CUDA Init Traj Called\n");
   t->n_node = n_node;
   int i;
   for (i = 0; i < t->n_node; i++) {
@@ -173,7 +172,7 @@ __global__ void cuda_init_trajectory(trajectory_t t, const experiment_t e, int n
 
 __global__ void cuda_check_for_repetition(trajectory_t traj, int i_state)
 {
-  printf("CUDA Check for Repeat Called\n");
+  // printf("CUDA Check for Repeat Called\n");
   const int n_node = traj->n_node;
   int i_node, j_state;
   const int *si = &traj->state[i_state][0];
@@ -216,7 +215,7 @@ __global__ void cuda_check_for_repetition(trajectory_t traj, int i_state)
 
 __global__ static void cuda_advance(const network_t n, trajectory_t traj, int i_state)
 {
-  printf("CUDA Advance Called\n");
+  // printf("CUDA Advance Called\n");
   const int n_node = n->n_node;
   /* find new state */
   int *si = &traj->state[i_state][0];
@@ -237,7 +236,7 @@ __global__ static void cuda_advance(const network_t n, trajectory_t traj, int i_
 }
 __global__ void cuda_network_advance_until_repetition(const network_t n, const experiment_t e, trajectory_t t, int max_states)
 {
-  printf("CUDA Network Advance until Repeat Called\n");
+  // printf("CUDA Network Advance until Repeat Called\n");
   cuda_init_trajectory<<<1,1>>>(t, e, n->n_node); // TODO: figure out grid, block
   int i;
   for (i = 1; i < max_states && !cuda_repetition_found(t); i++) {
@@ -248,7 +247,7 @@ __global__ void cuda_network_advance_until_repetition(const network_t n, const e
 
 __global__ void cuda_score_device(int n, network_t net, const experiment_set_t eset, trajectory_t trajectories, double limit, int max_states, double *s_kernels) {
   // TODO: something 
-  printf("CUDA Score Device Called\n");
+  // printf("CUDA Score Device Called\n");
   int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
   if (globalIdx < n) {
     const experiment_t e = &eset->experiment[globalIdx];
@@ -262,7 +261,7 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
 }
 
 static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
-  printf("CUDA Score Called\n");
+  // printf("CUDA Score Called\n");
   double s_tot = 0;
   // initialize memory
   int N = gpu_eset->n_experiment;
@@ -833,7 +832,7 @@ static double fraction(unsigned long a, unsigned long b)
 }
 
 double network_monte_carlo(network_t n, 
-			   const experiment_set_t e, 
+			   experiment_set_t e, 
 			   unsigned long n_cycles,
 			   unsigned long n_write,
 			   double T_lo,
@@ -874,12 +873,10 @@ double network_monte_carlo(network_t n,
 
 // if CUDA, move the datastructures to Unified_Memory
 #ifdef USE_CUDA
-  network_t gpu_n = load_network_to_gpu(n);
-  experiment_set_t gpu_e = load_experiment_set_to_gpu(e);
+  n = load_network_to_gpu(n);
+  e = load_experiment_set_to_gpu(e);
   trajectory_t trajectories = new_trajectory_gpu(e->n_experiment, max_states, n_node);
-  double s = cuda_score_host(gpu_n, gpu_e, trajectories, HUGE_VAL, max_states), s_best = s;
-  n = gpu_n;
-  e = gpu_e;
+  double s = cuda_score_host(n, e, trajectories, HUGE_VAL, max_states), s_best = s;
 #endif // END of USE_CUDA
 
 
@@ -901,7 +898,9 @@ double network_monte_carlo(network_t n,
   fflush(out);
   struct network best;
   // n->n_node = (int) n->n_node;
+  // TODO have a new network init for cuda
   network_init(&best, n->n_node, n->n_parent);
+  // TODO have a new network copy for cuda
   copy_network(&best, n);
   struct network t0;
   network_init(&t0, n->n_node, n->n_parent);
@@ -909,6 +908,7 @@ double network_monte_carlo(network_t n,
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
   for (i = 1; i <= n_cycles; i++) {
+    // printf("Running iteration %lu out of %lu\n", i, n_cycles);
 #ifdef USE_MPI
     if (mpi_size == 1)
 #endif
@@ -929,12 +929,12 @@ double network_monte_carlo(network_t n,
       outcome_tries++;
       const int i_all_parents_unperturbed = (n->n_outcome - 1)/2;
       for (j = 0; j < outcome_moves; j++) {
-	const int k = random_int_inclusive(0, n_node - 1);
+	      const int k = random_int_inclusive(0, n_node - 1);
       	/* change outcomes */
       	if (n->n_parent > 0) {
       	  int i_outcome;
           do
-	    i_outcome = random_int_inclusive(0, n->n_outcome - 1);
+	          i_outcome = random_int_inclusive(0, n->n_outcome - 1);
       	  while (i_outcome == i_all_parents_unperturbed);
       	  n->outcome[k][i_outcome] = random_outcome();
       	}

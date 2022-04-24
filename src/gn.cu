@@ -248,6 +248,13 @@ __global__ void cuda_network_advance_until_repetition(const network_t n, const e
 __global__ void cuda_score_device(int n, network_t net, const experiment_set_t eset, trajectory_t trajectories, double limit, int max_states, double *s_kernels) {
   // TODO: something 
   // printf("CUDA Score Device Called\n");
+  double s_tot = 0.0;
+  for (int i = 0; i < n; i++) {
+    s_tot += s_kernels[i];
+  }
+  if (s_tot > limit) {
+    return;
+  }
   int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
   if (globalIdx < n) {
     const experiment_t e = &eset->experiment[globalIdx];
@@ -271,8 +278,11 @@ static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, 
     s_kernels[i] = 0.0;
   }
   // copy data
-  cudaMalloc(&gpu_s_kernels, N*sizeof(double));
-  cudaMemcpy(gpu_s_kernels, s_kernels, N*sizeof(double), cudaMemcpyHostToDevice);
+  cudaMallocManaged(&gpu_s_kernels, N*sizeof(double));
+  for (int i = 0; i < N; i++) {
+    gpu_s_kernels[i] = 0.0;
+  }
+  // cudaMemcpy(gpu_s_kernels, s_kernels, N*sizeof(double), cudaMemcpyHostToDevice);
 
   // make grid and block sizes according to input
   int TILE = 8;
@@ -280,16 +290,15 @@ static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, 
   dim3 dimBlock(TILE, 1, 1);
   // launch kernel
   cuda_score_device<<<dimGrid, dimBlock>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
-  // TODO: figure how to sync (s_tot <= limit) check 
+  // TODO: figure how to sync (s_tot <= limit) check [each kernel before starting checks]
+  
   cudaDeviceSynchronize();
-  // synchronize and free memomry
-
-  cudaMemcpy(s_kernels, gpu_s_kernels, N*sizeof(double), cudaMemcpyDeviceToHost);
+  // synchronize
   // calculate s_total
   for (int i = 0; i < N; i++) {
-    s_tot += s_kernels[i];
+    s_tot += gpu_s_kernels[i];
   }
-
+  
   // free GPU memory
   cudaFree(gpu_s_kernels);
   return s_tot;
@@ -1035,7 +1044,7 @@ double network_monte_carlo(network_t n,
     /* adjust number of moves */
     if (parent_tries == adjust_move_size_interval) { 
       const double f = fraction(parent_acc, parent_tries);
-      if (f > 0.5 && parent_moves < n_node)
+      if (f > 0.5 && (int) parent_moves < n_node)
 	parent_moves++;
       else if (f < 0.5 && parent_moves > 1)
 	parent_moves--;

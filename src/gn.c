@@ -85,6 +85,33 @@ unsigned three_to_the(unsigned n)
   return a;
 }
 
+void print_network(network_t network) 
+{
+  printf("Number of nodes %d\n", network->n_node);
+  printf("Number of parents %d\n", network->n_parent);
+  printf("Number of outcomes %d\n", network->n_outcome);
+  int row = network->n_node;
+  int col = network->n_parent;
+  int i,j;
+  for (i = 0; i < row; i++)
+  {
+    for (j = 0; j < col; j++)
+    {
+        printf("%d ", network->parent[i][j]);
+    }
+    printf("\n");
+  }
+  col = network->n_outcome;
+  for (i = 0; i < row; i++)
+  {
+    for (j = 0; j < col; j++)
+    {
+        printf("%d ", network->outcome[i][j]);
+    }
+    printf("\n");
+  }
+}
+
 void network_init(network_t n, int n_node, int max_parents)
 {
   n->n_node = n_node;
@@ -478,16 +505,20 @@ static double score_for_trajectory(const experiment_t e, const trajectory_t t)
   return s;
 }
 
-static double score(network_t n, const experiment_set_t eset, trajectory_t trajectories, 
+double score(network_t n, const experiment_set_t eset, trajectory_t trajectories, 
                     double limit, int max_states)
 {
   double s_tot = 0;
   int i_exp;
+  omp_set_num_threads(1);
 #pragma omp parallel for
   for (i_exp = 0; i_exp < eset->n_experiment; i_exp++)
     if (s_tot <= limit) {
+      printf("Getting experiment and trajectories for %d\n", i_exp);
       const experiment_t e = &eset->experiment[i_exp];
       trajectory_t traj = &trajectories[i_exp];
+      printf("Obtained experiment and trajectories for %d\n", i_exp);
+      print_network(n);
       network_advance_until_repetition(n, e, traj, max_states);
       const double s = repetition_found(traj) ? score_for_trajectory(e, traj) : limit;
 #pragma omp atomic
@@ -559,33 +590,6 @@ void print_matrix(int **mat, int m, int n)
   for (i=0;i<m;i++) {
     for (j=0;j<n;j++) {
       printf("%d ", mat[i][j]);
-    }
-    printf("\n");
-  }
-}
-
-void print_network(network_t network) 
-{
-  printf("Number of nodes %d\n", network->n_node);
-  printf("Number of parents %d\n", network->n_parent);
-  printf("Number of outcomes %d\n", network->n_outcome);
-  int row = network->n_node;
-  int col = network->n_parent;
-  int i,j;
-  for (i = 0; i < row; i++)
-  {
-    for (j = 0; j < col; j++)
-    {
-        printf("%d ", network->parent[i][j]);
-    }
-    printf("\n");
-  }
-  col = network->n_outcome;
-  for (i = 0; i < row; i++)
-  {
-    for (j = 0; j < col; j++)
-    {
-        printf("%d ", network->outcome[i][j]);
     }
     printf("\n");
   }
@@ -685,6 +689,7 @@ double network_monte_carlo(network_t n,
       }
     }
     const double limit = s - T*log(uniform_random_from_0_to_1_exclusive());
+    printf("Limit: %lf\n", limit);
     const double s_new = score(n, e, trajectories, limit, max_states);
     printf("New score obtained in iteration %u is %lf on CPU\n", i, s_new);
     printf("Current network\n");

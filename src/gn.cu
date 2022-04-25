@@ -255,17 +255,18 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
     return;
   }
   int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  // printf("Running kernel for experiment %d\n", globalIdx);
   if (globalIdx < n) {
+    printf("Block: %d Thread %d: Limit %lf\n", blockIdx.x, globalIdx, limit);
     const experiment_t e = &eset->experiment[globalIdx];
     trajectory_t traj = &trajectories[globalIdx];
     cuda_network_advance_until_repetition<<<1,1>>>(net, e, traj, max_states); // TODO: __global__ function call must be configured
     const double s = cuda_repetition_found(traj) ? cuda_score_for_trajectory(e, traj) : limit;
+    printf("Thread %d: Score %lf\n", globalIdx, s);
     s_kernels[globalIdx] = s;
   }
 }
 
-static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
+double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
   // printf("CUDA Score Called\n");
   double s_tot = 0;
   // initialize memory
@@ -861,6 +862,7 @@ void print_network(network_t network)
   printf("Number of outcomes %d\n", network->n_outcome);
   int row = network->n_node;
   int col = network->n_parent;
+  printf("Parents\n");
   for (int i = 0; i < row; i++)
   {
     for (int j = 0; j < col; j++)
@@ -870,6 +872,7 @@ void print_network(network_t network)
     printf("\n");
   }
   col = network->n_outcome;
+  printf("Outcomes\n");
   for (int i = 0; i < row; i++)
   {
     for (int j = 0; j < col; j++)
@@ -956,7 +959,7 @@ double network_monte_carlo(network_t n,
   unsigned long parent_acc = 0, parent_tries = 0, parent_moves = 1;
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
-  for (i = 1; i <= n_cycles; i++) {
+  for (i = 1; i <= 2; i++) {
     // printf("Running iteration %lu out of %lu\n", i, n_cycles);
 #ifdef USE_MPI
     if (mpi_size == 1)
@@ -997,7 +1000,7 @@ double network_monte_carlo(network_t n,
 #endif
     printf("New score obtained in iteration %lu is %lf on GPU\n", i, s_new);
     // printf("Current network\n");
-    // print_network(n);
+    print_network(n);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)

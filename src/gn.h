@@ -25,7 +25,7 @@ extern "C" {
   void network_read_parents_from_intp(network_t, const int *parents);
   void network_read_outcomes_from_intp(network_t, const int *outcomes);
   void network_delete(network_t);
-
+  
   typedef struct experiment
   {
     double score[MAX_NODES][3];
@@ -46,6 +46,12 @@ extern "C" {
     int **state; /* max_states x MAX_NODES */
     int steady_state[MAX_NODES];
   } *trajectory_t;
+
+  network_t load_network_to_gpu(network_t);
+  experiment_set_t load_experiment_set_to_gpu(experiment_set_t);
+  trajectory_t new_trajectory_gpu(int, int, int);
+  double cuda_score_host(network_t, experiment_set_t, trajectory_t, double limit, int max_states);
+  double score(network_t, experiment_set_t, trajectory_t, double limit, int max_states);
 
   trajectory_t trajectories_new(int ntraj, int max_states, int n_node);
   void trajectories_delete(trajectory_t, int ntraj);

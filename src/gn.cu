@@ -678,6 +678,7 @@ static void write_most_probable(FILE *f, const experiment_t e, int n_node)
 double scale_factor(const experiment_set_t eset)
 {
   return 1.0 / (eset->n_experiment * eset->n_node);
+}
 
 double lowest_possible_score(const experiment_set_t eset)
 {
@@ -955,7 +956,7 @@ double network_monte_carlo(network_t n,
   unsigned long parent_acc = 0, parent_tries = 0, parent_moves = 1;
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
-  for (i = 1; i <= 20; i++) {
+  for (i = 1; i <= n_cycles; i++) {
     // printf("Running iteration %lu out of %lu\n", i, n_cycles);
 #ifdef USE_MPI
     if (mpi_size == 1)
@@ -995,8 +996,8 @@ double network_monte_carlo(network_t n,
     const double s_new = cuda_score_host(n, e, trajectories, limit, max_states);
 #endif
     printf("New score obtained in iteration %lu is %lf on GPU\n", i, s_new);
-    printf("Current network\n");
-    print_network(n);
+    // printf("Current network\n");
+    // print_network(n);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)
@@ -1103,6 +1104,7 @@ double network_monte_carlo(network_t n,
       outcome_acc = 0;
     }
   }
+  // End of for loop
   copy_network(n, &best);
   network_delete(&best);
   network_delete(&t0);

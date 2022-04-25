@@ -27,7 +27,7 @@ double run_monte_carlo(const int *i_exp,
     int exchange_interval = 1000;
     int adjust_move_size_interval = 7001;
     int n_cycles = 1000000;
-    int max_parents = 10;
+    int max_parents = 2;
     int n_write = 10;
     FILE *output_file = fopen("../runs/debug.txt", "w");
 
@@ -63,6 +63,7 @@ double run_monte_carlo(const int *i_exp,
 
 void test1()
 {
+    printf("Running test 1\n");
     const int i_exp[] = {0, 0, 0, 0, 0, 0, 0, 0, 0,
                          1, 1, 1, 1, 1, 1, 1, 1, 1,
                          2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -165,6 +166,7 @@ void test1()
 }
 
 void test2() {
+    printf("Running test 2\n");
     const int i_exp[] = {0,0,0, 0,0,0, 0,0,0, 0,0,0,
                           1,1,1, 1,1,1, 1,1,1, 1,1,1,
                           2,2,2, 2,2,2, 2,2,2, 2,2,2,

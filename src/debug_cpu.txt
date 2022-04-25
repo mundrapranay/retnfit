@@ -1,0 +1,609 @@
+Running test 1
+Intialized experiment
+Intialized network
+Randomized parents
+Set outcomes to null
+Running score with parameters n_cycles=1000000 n_write=10 T_lo=0.001000 T_high=2.000000 n_thread=1 target_score=0.000000 exchange_interval=1000 adjust_move_size_interval=7001 max_states=10
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Limit: 6.723310
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+New score obtained in iteration 1 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 1 0 0 0 0 0 
+Limit: 7.464032
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 2 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+Limit: 7.440620
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 3 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+Limit: 7.105413
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+New score obtained in iteration 4 is 8.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 -1 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+Limit: 8.694495
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 5 is 8.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 -1 
+Limit: 11.992871
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 6 is 8.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 -1 
+Limit: 8.932425
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 7 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 0 0 0 0 0 -1 
+Limit: 7.534190
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 8 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 0 0 0 0 0 -1 
+Limit: 8.908503
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 9 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 -1 0 0 0 0 -1 
+Limit: 10.672409
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 10 is 5.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 -1 0 0 0 0 0 
+Limit: 7.347391
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 11 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 -1 0 -1 0 0 0 
+Limit: 7.625848
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 12 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 -1 0 -1 0 0 0 
+Limit: 7.311466
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 13 is 4.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 
+0 0 1 -1 0 1 0 0 0 
+Limit: 10.159464
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 14 is 5.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 1 0 
+0 0 1 -1 0 1 0 0 0 
+Limit: 5.474161
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 2.000000
+New score obtained in iteration 15 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 1 0 
+0 0 1 -1 0 1 1 0 0 
+Limit: 5.341044
+Score 0.000000
+Score 1.000000
+Score 2.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+New score obtained in iteration 16 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 1 
+0 0 0 0 0 0 0 1 0 
+0 0 1 -1 0 1 0 0 0 
+Limit: 7.710855
+Score 0.000000
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 17 is 6.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 0 0 0 0 0 1 0 
+0 0 1 -1 0 1 0 1 0 
+Limit: 9.998872
+Score 0.000000
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 2.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 18 is 7.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 -1 0 0 0 0 1 0 
+0 0 1 -1 0 1 0 1 0 
+Limit: 9.101521
+Score 0.000000
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 3.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 19 is 8.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 -1 0 0 0 0 1 0 
+0 -1 1 -1 0 1 0 1 0 
+Limit: 8.255667
+Score 0.000000
+Score 2.000000
+Score 1.000000
+Score 0.000000
+Score 3.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+Score 1.000000
+Score 1.000000
+Score 0.000000
+Score 0.000000
+Score 0.000000
+New score obtained in iteration 20 is 8.000000 on CPU
+Current network
+Number of nodes 3
+Number of parents 2
+Number of outcomes 9
+1 2 
+0 2 
+0 1 
+0 0 0 -1 0 0 0 0 0 
+0 0 -1 0 0 0 0 1 0 
+0 -1 1 -1 0 1 0 1 0 
+Finished running score, obtained value 4.000000

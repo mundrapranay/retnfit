@@ -259,12 +259,10 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
   if (globalIdx < n) {
     const experiment_t e = &eset->experiment[globalIdx];
     trajectory_t traj = &trajectories[globalIdx];
-    // TODO: how call function from within the kernel?
     cuda_network_advance_until_repetition<<<1,1>>>(net, e, traj, max_states); // TODO: __global__ function call must be configured
     const double s = cuda_repetition_found(traj) ? cuda_score_for_trajectory(e, traj) : limit;
     s_kernels[globalIdx] = s;
   }
-
 }
 
 static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
@@ -291,7 +289,7 @@ static double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, 
   // cuda_score_device<<<dimGrid, dimBlock>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
 
   // Using 1D blocks
-  int numThreads = 32;
+  int numThreads = 64;
   int numBlocks = (N + numThreads - 1 )/ numThreads;
   cuda_score_device<<<numBlocks, numThreads>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
   // TODO: figure how to sync (s_tot <= limit) check [each kernel before starting checks]
@@ -680,7 +678,6 @@ static void write_most_probable(FILE *f, const experiment_t e, int n_node)
 double scale_factor(const experiment_set_t eset)
 {
   return 1.0 / (eset->n_experiment * eset->n_node);
-}
 
 double lowest_possible_score(const experiment_set_t eset)
 {
@@ -856,6 +853,32 @@ void print_matrix(int **mat, int m, int n)
   }
 }
 
+void print_network(network_t network) 
+{
+  printf("Number of nodes %d\n", network->n_node);
+  printf("Number of parents %d\n", network->n_parent);
+  printf("Number of outcomes %d\n", network->n_outcome);
+  int row = network->n_node;
+  int col = network->n_parent;
+  for (int i = 0; i < row; i++)
+  {
+    for (int j = 0; j < col; j++)
+    {
+        printf("%d ", network->parent[i][j]);
+    }
+    printf("\n");
+  }
+  col = network->n_outcome;
+  for (int i = 0; i < row; i++)
+  {
+    for (int j = 0; j < col; j++)
+    {
+        printf("%d ", network->outcome[i][j]);
+    }
+    printf("\n");
+  }
+}
+
 double network_monte_carlo(network_t n, 
 			   experiment_set_t e, 
 			   unsigned long n_cycles,
@@ -932,7 +955,7 @@ double network_monte_carlo(network_t n,
   unsigned long parent_acc = 0, parent_tries = 0, parent_moves = 1;
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
-  for (i = 1; i <= n_cycles; i++) {
+  for (i = 1; i <= 20; i++) {
     // printf("Running iteration %lu out of %lu\n", i, n_cycles);
 #ifdef USE_MPI
     if (mpi_size == 1)
@@ -972,6 +995,8 @@ double network_monte_carlo(network_t n,
     const double s_new = cuda_score_host(n, e, trajectories, limit, max_states);
 #endif
     printf("New score obtained in iteration %lu is %lf on GPU\n", i, s_new);
+    printf("Current network\n");
+    print_network(n);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)

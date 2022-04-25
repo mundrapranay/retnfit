@@ -553,6 +553,44 @@ static double fraction(unsigned long a, unsigned long b)
   return 0;
 }
 
+void print_matrix(int **mat, int m, int n) 
+{
+  int i,j;
+  for (i=0;i<m;i++) {
+    for (j=0;j<n;j++) {
+      printf("%d ", mat[i][j]);
+    }
+    printf("\n");
+  }
+}
+
+void print_network(network_t network) 
+{
+  printf("Number of nodes %d\n", network->n_node);
+  printf("Number of parents %d\n", network->n_parent);
+  printf("Number of outcomes %d\n", network->n_outcome);
+  int row = network->n_node;
+  int col = network->n_parent;
+  int i,j;
+  for (i = 0; i < row; i++)
+  {
+    for (j = 0; j < col; j++)
+    {
+        printf("%d ", network->parent[i][j]);
+    }
+    printf("\n");
+  }
+  col = network->n_outcome;
+  for (i = 0; i < row; i++)
+  {
+    for (j = 0; j < col; j++)
+    {
+        printf("%d ", network->outcome[i][j]);
+    }
+    printf("\n");
+  }
+}
+
 double network_monte_carlo(network_t n, 
 			   const experiment_set_t e, 
 			   unsigned long n_cycles,
@@ -614,7 +652,7 @@ double network_monte_carlo(network_t n,
   unsigned long parent_acc = 0, parent_tries = 0, parent_moves = 1;
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
-  for (i = 1; i <= n_cycles; i++) {
+  for (i = 1; i <= 20; i++) {
 #ifdef USE_MPI
     if (mpi_size == 1)
 #endif
@@ -648,6 +686,9 @@ double network_monte_carlo(network_t n,
     }
     const double limit = s - T*log(uniform_random_from_0_to_1_exclusive());
     const double s_new = score(n, e, trajectories, limit, max_states);
+    printf("New score obtained in iteration %u is %lf on CPU\n", i, s_new);
+    printf("Current network\n");
+    print_network(n);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)

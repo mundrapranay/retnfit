@@ -362,20 +362,23 @@ __global__ static void cuda_advance(const network_t n, trajectory_t traj, int i_
       si[i_node] = n->outcome[i_node][a];
     }
   }
-  printf("Trajectory after advancing a step\n");
-  print_trajectory<<<1,1>>>(traj, 10);
+  // printf("Trajectory after advancing a step\n");
+  // print_trajectory<<<1,1>>>(traj, 10);
 }
 __global__ void cuda_network_advance_until_repetition(const network_t n, const experiment_t e, trajectory_t t, int max_states)
 {
   // printf("CUDA Network Advance until Repeat Called\n");
   cuda_init_trajectory<<<1,1>>>(t, e, n->n_node); // TODO: figure out grid, block
+  cudaDeviceSynchronize();
   int i;
   for (i = 1; i < max_states && !cuda_repetition_found(t); i++) {
     cuda_advance<<<1,1>>>(n,t,i); // TODO: __global__ function call must be configured
+    cudaDeviceSynchronize();
     cuda_check_for_repetition<<<1,1>>>(t,i); // TODO: __global__ function call must be configured
-    if (cuda_repetition_found(t)) {
-      printf("Repetition found at i:%d\n",i);
-    }
+    cudaDeviceSynchronize();
+    // if (cuda_repetition_found(t)) {
+    //   printf("Repetition found inside for\n");
+    // }
   }
 }
 
@@ -390,12 +393,13 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
   }
   int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
   if (globalIdx < n) {
-    printf("Block: %d Thread %d: Limit %lf\n", blockIdx.x, globalIdx, limit);
+    // printf("Block: %d Thread %d: Limit %lf\n", blockIdx.x, globalIdx, limit);
     const experiment_t e = &eset->experiment[globalIdx];
     trajectory_t traj = &trajectories[globalIdx];
     cuda_network_advance_until_repetition<<<1,1>>>(net, e, traj, max_states); // TODO: __global__ function call must be configured
+    cudaDeviceSynchronize();
     const double s = cuda_repetition_found(traj) ? cuda_score_for_trajectory(e, traj) : limit;
-    printf("Thread %d: Score %lf\n", globalIdx, s);
+    // printf("Thread %d: Score %lf\n", globalIdx, s);
     s_kernels[globalIdx] = s;
   }
 }
@@ -403,10 +407,10 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
 double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
   // printf("CUDA Score Called\n");
   double s_tot = 0;
-  print_network(gpu_n);
-  printf("-----Initial trajectories--------\n");
-  print_trajectories(gpu_trajectories, gpu_eset->n_experiment, max_states);
-  printf("-------------\n");
+  // print_network(gpu_n);
+  // printf("-----Initial trajectories--------\n");
+  // print_trajectories(gpu_trajectories, gpu_eset->n_experiment, max_states);
+  // printf("-------------\n");
   // initialize memory
   int N = gpu_eset->n_experiment;
   double *s_kernels, *gpu_s_kernels;
@@ -420,12 +424,6 @@ double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, traject
     gpu_s_kernels[i] = 0.0;
   }
   // cudaMemcpy(gpu_s_kernels, s_kernels, N*sizeof(double), cudaMemcpyHostToDevice);
-
-  // make grid and block sizes according to input
-  // int TILE = 8;
-  // dim3 dimGrid((N - 1)/TILE + 1, (N - 1)/TILE + 1);
-  // dim3 dimBlock(TILE, 1, 1);
-  // cuda_score_device<<<dimGrid, dimBlock>>>(N, gpu_n, gpu_eset, gpu_trajectories, limit, max_states, gpu_s_kernels);
 
   // Using 1D blocks
   int numThreads = 64;
@@ -1070,7 +1068,7 @@ double network_monte_carlo(network_t n,
   unsigned long parent_acc = 0, parent_tries = 0, parent_moves = 1;
   unsigned long outcome_acc = 0, outcome_tries = 0, outcome_moves = 1;
   unsigned long i;
-  for (i = 1; i <= 2; i++) {
+  for (i = 1; i <= n_cycles; i++) {
     // printf("Running iteration %lu out of %lu\n", i, n_cycles);
 #ifdef USE_MPI
     if (mpi_size == 1)
@@ -1111,7 +1109,7 @@ double network_monte_carlo(network_t n,
 #endif
     printf("New score obtained in iteration %lu is %lf on GPU\n", i, s_new);
     // printf("Current network\n");
-    print_network(n);
+    // print_network(n);
     if (s_new < 0.9*LARGE_SCORE && s_new < limit) { 
       /* accepted */
       if (is_parent_move)

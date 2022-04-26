@@ -67,16 +67,16 @@ void test_score(const int *i_exp,
 
     // CPU score
     trajectory_t trajectories = trajectories_new(e_set.n_experiment, max_states, e_set.n_node);
-    printf("Initialized trajectories\n");
-    double cpu_score = score(&net, &e_set, trajectories, limit, max_states);
-    printf("CPU score: %lf\n", cpu_score);
+    // printf("Initialized trajectories\n");
+    // double cpu_score = score(&net, &e_set, trajectories, limit, max_states);
+    // printf("CPU score: %lf\n", cpu_score);
 
     // load data into GPU
-    // network_t d_net = load_network_to_gpu(&net);
-    // experiment_set_t d_e_set = load_experiment_set_to_gpu(&e_set);
-    // trajectory_t d_trajectories = new_trajectory_gpu(d_e_set->n_experiment, max_states, d_e_set->n_node, trajectories);
-    // double gpu_score = cuda_score_host(d_net, d_e_set, d_trajectories, limit, max_states);
-    // printf("Score:%lf\n",gpu_score);
+    network_t d_net = load_network_to_gpu(&net);
+    experiment_set_t d_e_set = load_experiment_set_to_gpu(&e_set);
+    trajectory_t d_trajectories = new_trajectory_gpu(d_e_set->n_experiment, max_states, d_e_set->n_node, trajectories);
+    double gpu_score = cuda_score_host(d_net, d_e_set, d_trajectories, limit, max_states);
+    printf("Score:%lf\n",gpu_score);
 }
 
 int main()

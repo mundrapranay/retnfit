@@ -49,7 +49,7 @@ extern "C" {
 
   network_t load_network_to_gpu(network_t);
   experiment_set_t load_experiment_set_to_gpu(experiment_set_t);
-  trajectory_t new_trajectory_gpu(int, int, int);
+  trajectory_t new_trajectory_gpu(int, int, int, trajectory_t);
   double cuda_score_host(network_t, experiment_set_t, trajectory_t, double limit, int max_states);
   double score(network_t, experiment_set_t, trajectory_t, double limit, int max_states);
 

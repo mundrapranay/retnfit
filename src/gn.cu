@@ -86,6 +86,41 @@ network_t load_network_to_gpu(network_t n)
   return d_n;
 }
 
+trajectory_t load_trajectory_onto_gpu(trajectory_t traj, int n, int max_states)
+{
+  trajectory_t d_t;
+  cudaMallocManaged(&d_t, n * sizeof(trajectory_t));
+  printf("Number of trajectories to initalize %d\n", n);
+  for (int i=0;i<n;i++)
+  {
+    trajectory_t curr = &d_t[i];
+    cudaMallocManaged(&curr, sizeof(trajectory));
+    trajectory_t toCopy = &traj[i];
+    curr->n_node = toCopy->n_node;
+    curr->repetition_start = toCopy->repetition_start;
+    curr->repetition_end = toCopy->repetition_end;
+    cudaMemcpy(curr->is_persistent, toCopy->is_persistent, sizeof(int)*MAX_NODES, cudaMemcpyHostToDevice);
+    cudaMemcpy(curr->steady_state, toCopy->steady_state, sizeof(int)*MAX_NODES, cudaMemcpyHostToDevice);
+    int *state_data;
+    cudaMallocManaged(&state_data, max_states*curr->n_node*sizeof(int));
+    cudaMallocManaged(&curr->state, max_states*sizeof(int*));
+    printf("Initialized data for trajectory %d\n",i);
+    for (int j=0;j<max_states;j++)
+    {
+      for (int k=0;k<curr->n_node;k++)
+      {
+        state_data[j*curr->n_node+k] = toCopy->state[j][k];
+      }
+    }
+    for (int j=0;j<max_states;j++)
+    {
+      curr->state[j] = &(state_data[j*curr->n_node]);
+    }
+
+  }
+  return d_t;
+}
+
 experiment_set_t load_experiment_set_to_gpu(experiment_set_t eset) {
     experiment_set_t d_eset;
     const size_t size = sizeof(experiment_set);
@@ -98,7 +133,7 @@ experiment_set_t load_experiment_set_to_gpu(experiment_set_t eset) {
     return d_eset;
 }
 
-trajectory_t new_trajectory_gpu(int ntraj, int max_states, int n_node) 
+trajectory_t new_trajectory_gpu(int ntraj, int max_states, int n_node, trajectory_t t) 
 {
   trajectory_t d_t;
   cudaMallocManaged(&d_t, ntraj*sizeof(trajectory));
@@ -106,7 +141,15 @@ trajectory_t new_trajectory_gpu(int ntraj, int max_states, int n_node)
   {
       int *data;
       trajectory_t curr = &d_t[i];
+      trajectory_t toCopy = &t[i];
       cudaMallocManaged(&data, max_states*n_node*sizeof(int));
+      for (int j=0;j<max_states;j++)
+      {
+        for (int k=0;k<n_node;k++)
+        {
+          data[j*n_node+k] = toCopy->state[j][k];
+        }
+      }
       cudaMallocManaged(&curr->state, max_states * sizeof(int *));
       for (int j=0;j<max_states;j++) 
       {
@@ -116,13 +159,71 @@ trajectory_t new_trajectory_gpu(int ntraj, int max_states, int n_node)
   return d_t;
 }
 
+void print_network(network_t network) 
+{
+  printf("Number of nodes %d\n", network->n_node);
+  printf("Number of parents %d\n", network->n_parent);
+  printf("Number of outcomes %d\n", network->n_outcome);
+  int row = network->n_node;
+  int col = network->n_parent;
+  printf("Parents\n");
+  for (int i = 0; i < row; i++)
+  {
+    for (int j = 0; j < col; j++)
+    {
+        printf("%d ", network->parent[i][j]);
+    }
+    printf("\n");
+  }
+  col = network->n_outcome;
+  printf("Outcomes\n");
+  for (int i = 0; i < row; i++)
+  {
+    for (int j = 0; j < col; j++)
+    {
+        printf("%d ", network->outcome[i][j]);
+    }
+    printf("\n");
+  }
+}
 
-__device__ static int cuda_repetition_found(const trajectory_t t)
+void print_trajectories(trajectory_t traj, int n, int max_states) 
+{
+  for (int i=0;i<n;i++) 
+  {
+    printf("####Trajectory %d#####\n", i);
+    trajectory_t t = &traj[i];
+    printf("N_node %d\n", t->n_node);
+    printf("Repetition start %d\n", t->repetition_start);
+    printf("Repetition stop %d\n", t->repetition_end);
+    printf("is persistent\n");
+    for (int i=0;i<MAX_NODES;i++)
+    {
+      printf("%d ", t->is_persistent[i]);
+    }
+    printf("\n");
+    printf("steady state\n");
+    for (int i=0;i<MAX_NODES;i++)
+    {
+      printf("%d ", t->steady_state[i]);
+    }
+    printf("States\n");
+    for (int i=0;i<max_states;i++) {
+      for (int j=0;j<traj->n_node;j++) {
+        printf("%d ", t->state[i][j]);
+      }
+      printf("New line\n");
+    }
+    printf("#######\n");
+  }
+}
+
+__device__ int cuda_repetition_found(const trajectory_t t)
 {
   return t->repetition_end > 0;
 }
 
-__device__ static double cuda_score_for_state(const experiment_t e, int i, int s)
+__device__ double cuda_score_for_state(const experiment_t e, int i, int s)
 {
   return e->score[i][s+1];
 }
@@ -168,6 +269,34 @@ __global__ void cuda_init_trajectory(trajectory_t t, const experiment_t e, int n
     t->is_persistent[j] = 1;
     t->state[0][j] = cuda_most_probable_state(e,j);
   }
+}
+
+__global__ void print_trajectory(trajectory_t t, int max_states)
+{
+  printf("####  Trajectory #####\n");
+  printf("N_node %d\n", t->n_node);
+  printf("Repetition start %d\n", t->repetition_start);
+  printf("Repetition stop %d\n", t->repetition_end);
+  printf("is persistent\n");
+  for (int i = 0; i < MAX_NODES; i++)
+  {
+    printf("%d ", t->is_persistent[i]);
+  }
+  printf("\n");
+  printf("steady state\n");
+  for (int i = 0; i < MAX_NODES; i++)
+  {
+    printf("%d ", t->steady_state[i]);
+  }
+  for (int i = 0; i < max_states; i++)
+  {
+    for (int j = 0; j < MAX_NODES; j++)
+    {
+      printf("%d ", t->state[i][j]);
+    }
+    printf("\n");
+  }
+  printf("#######\n");
 }
 
 __global__ void cuda_check_for_repetition(trajectory_t traj, int i_state)
@@ -233,6 +362,8 @@ __global__ static void cuda_advance(const network_t n, trajectory_t traj, int i_
       si[i_node] = n->outcome[i_node][a];
     }
   }
+  printf("Trajectory after advancing a step\n");
+  print_trajectory<<<1,1>>>(traj, 10);
 }
 __global__ void cuda_network_advance_until_repetition(const network_t n, const experiment_t e, trajectory_t t, int max_states)
 {
@@ -242,6 +373,9 @@ __global__ void cuda_network_advance_until_repetition(const network_t n, const e
   for (i = 1; i < max_states && !cuda_repetition_found(t); i++) {
     cuda_advance<<<1,1>>>(n,t,i); // TODO: __global__ function call must be configured
     cuda_check_for_repetition<<<1,1>>>(t,i); // TODO: __global__ function call must be configured
+    if (cuda_repetition_found(t)) {
+      printf("Repetition found at i:%d\n",i);
+    }
   }
 }
 
@@ -269,6 +403,10 @@ __global__ void cuda_score_device(int n, network_t net, const experiment_set_t e
 double cuda_score_host(network_t gpu_n, const experiment_set_t gpu_eset, trajectory_t gpu_trajectories, double limit, int max_states) {
   // printf("CUDA Score Called\n");
   double s_tot = 0;
+  print_network(gpu_n);
+  printf("-----Initial trajectories--------\n");
+  print_trajectories(gpu_trajectories, gpu_eset->n_experiment, max_states);
+  printf("-------------\n");
   // initialize memory
   int N = gpu_eset->n_experiment;
   double *s_kernels, *gpu_s_kernels;
@@ -769,7 +907,7 @@ static double score_for_trajectory(const experiment_t e, const trajectory_t t)
   return s;
 }
 
-static double score(network_t n, const experiment_set_t eset, trajectory_t trajectories, 
+double score(network_t n, const experiment_set_t eset, trajectory_t trajectories, 
                     double limit, int max_states)
 {
   double s_tot = 0;
@@ -855,34 +993,6 @@ void print_matrix(int **mat, int m, int n)
   }
 }
 
-void print_network(network_t network) 
-{
-  printf("Number of nodes %d\n", network->n_node);
-  printf("Number of parents %d\n", network->n_parent);
-  printf("Number of outcomes %d\n", network->n_outcome);
-  int row = network->n_node;
-  int col = network->n_parent;
-  printf("Parents\n");
-  for (int i = 0; i < row; i++)
-  {
-    for (int j = 0; j < col; j++)
-    {
-        printf("%d ", network->parent[i][j]);
-    }
-    printf("\n");
-  }
-  col = network->n_outcome;
-  printf("Outcomes\n");
-  for (int i = 0; i < row; i++)
-  {
-    for (int j = 0; j < col; j++)
-    {
-        printf("%d ", network->outcome[i][j]);
-    }
-    printf("\n");
-  }
-}
-
 double network_monte_carlo(network_t n, 
 			   experiment_set_t e, 
 			   unsigned long n_cycles,
@@ -927,7 +1037,8 @@ double network_monte_carlo(network_t n,
 #ifdef USE_CUDA
   n = load_network_to_gpu(n);
   e = load_experiment_set_to_gpu(e);
-  trajectory_t trajectories = new_trajectory_gpu(e->n_experiment, max_states, n_node);
+  trajectory_t trajectories_temp = trajectories_new(e->n_experiment, max_states, n_node);
+  trajectory_t trajectories = new_trajectory_gpu(e->n_experiment, max_states, n_node, trajectories_temp);
   double s = cuda_score_host(n, e, trajectories, HUGE_VAL, max_states), s_best = s;
 #endif // END of USE_CUDA
 

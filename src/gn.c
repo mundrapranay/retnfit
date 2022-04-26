@@ -85,6 +85,36 @@ unsigned three_to_the(unsigned n)
   return a;
 }
 
+void print_trajectories(trajectory_t traj, int n, int max_states) 
+{
+  for (int i=0;i<n;i++) 
+  {
+    printf("####Trajectory %d#####\n", i);
+    trajectory_t t = &traj[i];
+    printf("N_node %d\n", t->n_node);
+    printf("Repetition start %d\n", t->repetition_start);
+    printf("Repetition stop %d\n", t->repetition_end);
+    printf("is persistent\n");
+    for (int i=0;i<MAX_NODES;i++)
+    {
+      printf("%d ", t->is_persistent[i]);
+    }
+    printf("\n");
+    printf("steady state\n");
+    for (int i=0;i<MAX_NODES;i++)
+    {
+      printf("%d ", t->steady_state[i]);
+    }
+    for (int i=0;i<max_states;i++) {
+      for (int j=0;j<MAX_NODES;j++) {
+        printf("%d ", t->state[i][j]);
+      }
+      printf("\n");
+    }
+    printf("#######\n");
+  }
+}
+
 void print_network(network_t network) 
 {
   printf("Number of nodes %d\n", network->n_node);
@@ -110,6 +140,34 @@ void print_network(network_t network)
     }
     printf("\n");
   }
+}
+
+void print_trajectory(trajectory_t t, int max_states)
+{
+  printf("####  Trajectory #####\n");
+  printf("N_node %d\n", t->n_node);
+  printf("Repetition start %d\n", t->repetition_start);
+  printf("Repetition stop %d\n", t->repetition_end);
+  printf("is persistent\n");
+  for (int i = 0; i < MAX_NODES; i++)
+  {
+    printf("%d ", t->is_persistent[i]);
+  }
+  printf("\n");
+  printf("steady state\n");
+  for (int i = 0; i < MAX_NODES; i++)
+  {
+    printf("%d ", t->steady_state[i]);
+  }
+  for (int i = 0; i < max_states; i++)
+  {
+    for (int j = 0; j < MAX_NODES; j++)
+    {
+      printf("%d ", t->state[i][j]);
+    }
+    printf("\n");
+  }
+  printf("#######\n");
 }
 
 void network_init(network_t n, int n_node, int max_parents)
@@ -228,6 +286,8 @@ static void advance(const network_t n, trajectory_t traj, int i_state)
       si[i_node] = n->outcome[i_node][a];
     }
   }
+  printf("Trajectory after advancing a step\n");
+  print_trajectory(traj, 10);
 }
 
 static void check_for_repetition(trajectory_t traj, int i_state)
@@ -303,7 +363,20 @@ trajectory_t trajectories_new(int ntraj, int max_states, int n_node)
   trajectory_t t = (trajectory_t) safe_malloc(ntraj*sizeof(struct trajectory));
   int i;
   for (i = 0; i < ntraj; i++)
+  {
     t[i].state = int_array2D_new(max_states, n_node);
+    int j,k;
+    // printf("Initializing array for %d\n", i);
+    for (j=0;j<max_states;j++) 
+    {
+      for(k=0;k<n_node;k++)
+      {
+        t[i].state[j][k] = 0;
+      }
+    }
+    // printf("Intialized values to 0\n");
+  }
+    
   return t;
 }
 
@@ -433,10 +506,14 @@ double lowest_possible_score(const experiment_set_t eset)
 void network_advance_until_repetition(const network_t n, const experiment_t e, trajectory_t t, int max_states)
 {
   init_trajectory(t, e, n->n_node);
+  // print_trajectory(t, max_states);
   int i;
   for (i = 1; i < max_states && !repetition_found(t); i++) {
     advance(n,t,i);
     check_for_repetition(t,i);
+    if (repetition_found(t)) {
+      printf("Repetition found at %d\n",i);
+    }
   }
 }
 
@@ -511,14 +588,17 @@ double score(network_t n, const experiment_set_t eset, trajectory_t trajectories
   double s_tot = 0;
   int i_exp;
   omp_set_num_threads(1);
+  print_network(n);
+  printf("-----Initial trajectories--------\n");
+  print_trajectories(trajectories, eset->n_experiment, max_states);
+  printf("-------------\n");
 #pragma omp parallel for
   for (i_exp = 0; i_exp < eset->n_experiment; i_exp++)
     if (s_tot <= limit) {
-      printf("Getting experiment and trajectories for %d\n", i_exp);
       const experiment_t e = &eset->experiment[i_exp];
       trajectory_t traj = &trajectories[i_exp];
-      printf("Obtained experiment and trajectories for %d\n", i_exp);
-      print_network(n);
+      // printf("Obtained experiment and trajectories for %d\n", i_exp);
+      // print_network(n);
       network_advance_until_repetition(n, e, traj, max_states);
       const double s = repetition_found(traj) ? score_for_trajectory(e, traj) : limit;
 #pragma omp atomic
